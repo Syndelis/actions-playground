@@ -11,9 +11,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: clang-format-15 clang-tidy-15
+          version: 1.0
+          execute_install_scripts: true
+
       - name: Lint and Format
-        uses: cpp-linter/cpp-linter-action@v2
+        uses: Syndelis/cpp-linter-action@v2.5.1
         id: linter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -27,3 +36,11 @@ jobs:
           thread-comments: false
           file-annotations: true
           extra-args: '-std=c++20'
+          skip-installation-phase: true
+
+      - name: Output format suggested changes
+        if: steps.linter.outputs.checks-failed > 0
+        run: |
+          echo "The following changes are suggested by the linter:"
+          make check-format
+          exit $?
