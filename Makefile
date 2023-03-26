@@ -1,7 +1,7 @@
 CPP_STD=-std=c++20
 CC=clang++ $(CPP_STD)
 
-SRC=$(wildcard src/*.cpp)
+SRC=$(wildcard src/**/*.cpp)
 OBJ=$(SRC:.cpp=.o)
 
 all: $(OBJ)
@@ -11,7 +11,7 @@ all: $(OBJ)
 	$(CC) -c -o $@ $<
 
 clean:
-	rm $(OBJ) main
+	rm -f $(OBJ) main
 
 lint:
 	clang-tidy $(SRC) -- $(CPP_STD)
