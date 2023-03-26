@@ -23,7 +23,7 @@ jobs:
           version: 15
           lines-changed-only: false
           files-changed-only: false
-          ignore: ./lib/|!./src/
+          ignore: 'lib'
           thread-comments: false
           file-annotations: true
           extra-args: '-std=c++20'
