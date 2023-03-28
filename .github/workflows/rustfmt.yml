@@ -10,6 +10,12 @@ jobs:
     permissions:
       checks: write
       statuses: write
+      actions: read
+      contents: read
+      deployments: read
+      issues: read
+      pull-requests: read
+      repository-projects: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
