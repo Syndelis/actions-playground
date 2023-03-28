@@ -6,10 +6,10 @@ on:
       - '**'
 
 jobs:
-  permissions:
-    checks: write
-    statuses: write
   rustfmt:
+    permissions:
+      checks: write
+      statuses: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
