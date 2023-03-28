@@ -14,13 +14,6 @@ jobs:
         with:
           submodules: true
 
-      - name: Install dependencies
-        uses: awalsh128/cache-apt-pkgs-action@v1
-        with:
-          packages: clang-format-15 clang-tidy-15 clang-tools-15
-          version: 1.0
-          execute_install_scripts: true
-
       - name: Lint and Format
         uses: Syndelis/cpp-linter-action@main
         id: linter
@@ -36,7 +29,6 @@ jobs:
           thread-comments: false
           file-annotations: true
           extra-args: '-std=c++20'
-          skip-installation-phase: true
 
       - name: Output format suggested changes
         if: steps.linter.outputs.checks-failed > 0
