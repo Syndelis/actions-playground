@@ -6,6 +6,9 @@ on:
       - '**'
 
 jobs:
+  permissions:
+    checks: write
+    statuses: write
   rustfmt:
     runs-on: ubuntu-latest
     steps:
