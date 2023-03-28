@@ -19,6 +19,6 @@ jobs:
           components: rustfmt
       
       - name: Rustfmt Check + Annotations
-        uses: Syndelis/rustfmt-action@master
+        uses: Syndelis/rustfmt-action@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
