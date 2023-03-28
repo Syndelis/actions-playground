@@ -1,9 +1,7 @@
 use std::alloc;
 
-fn main(
-
+fn main() {
+    println!("Hello, world!"
 )
-
-{
-    println!("Hello, world!");
+;
 }
