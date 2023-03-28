@@ -22,7 +22,7 @@ jobs:
           execute_install_scripts: true
 
       - name: Lint and Format
-        uses: Syndelis/cpp-linter-action@v2.5.3
+        uses: Syndelis/cpp-linter-action@main
         id: linter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
