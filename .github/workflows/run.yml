@@ -1,0 +1,60 @@
+name: Run
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Experimental - Update APT and Assert Sudo is Installed
+        run: apt update && apt install sudo -y
+
+      - name: Setup System Dependencies
+        uses: Syndelis/cache-apt-pkgs-action@master
+        with:
+          packages: build-essential default-libmysqlclient-dev gdal-bin
+          version: 1.0
+          execute_install_scripts: true
+
+      - name: Generate Dependencies Hash
+        id: pipfile_hash
+        uses: KEINOS/gh-action-hash-for-cache@e0515fd0280f1ef616e13cef3b2b9566938da2c4
+        with:
+          path: |
+            ./Pipfile
+
+      - name: Create Virtual Environment
+        shell: bash
+        run: |
+          python3 -m venv '.venv'
+          source '.venv/bin/activate'
+
+      - name: Install Pipfile Dependencies - Try Cache
+        id: pipfile_install_cache
+        uses: actions/cache/restore@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pipfile-${{ steps.pipfile_hash.outputs.hash }}
+
+      - name: Install Pipfile Dependencies - Cache miss
+        if: steps.pipfile_install_cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          source '.venv/bin/activate'
+          pip install pipenv
+          pipenv install --system --dev --deploy
+
+      - name: Install Pipfile Dependencies - Save Cache
+        uses: actions/cache/save@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pipfile-${{ steps.pipfile_hash.outputs.hash }}
+  
+      - name: Run
+        run: make
