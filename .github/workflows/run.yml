@@ -12,8 +12,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Experimental - Update APT
-        run: sudo apt update
+      - name: Experimental - Check APT Cache Age
+        run: stat /var/cache/apt/pkgcache.bin --printf="%W"
 
       - name: Setup System Dependencies
         uses: Syndelis/cache-apt-pkgs-action@master
