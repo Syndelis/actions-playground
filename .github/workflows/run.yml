@@ -12,8 +12,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Experimental - Update APT and Assert Sudo is Installed
-        run: apt update && apt install sudo -y
+      - name: Experimental - Update APT
+        run: sudo apt update
 
       - name: Setup System Dependencies
         uses: Syndelis/cache-apt-pkgs-action@master
