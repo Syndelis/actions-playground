@@ -26,7 +26,7 @@ jobs:
         run: echo "approved-reviews-count=[${{ steps.approved-reviews-counter.outputs.approved-reviews-count }}]"
 
       - name: Remove 'waiting review' and add 'waiting QA' labels if the PR was approved
-        if: steps.approved-reviews-counter.outputs.approved-reviews-count >= 2
+        if: steps.approved-reviews-counter.outputs.approved-reviews-count >= 1
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
