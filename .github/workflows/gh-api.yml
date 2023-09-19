@@ -17,7 +17,7 @@ jobs:
         run: |
           APPROVED_REVIEWS_COUNT=$(gh api \
             /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
-            --jq 'map(select(.state == "APPROVED")) | length')
+            --jq '[.[] | select(.state == "APPROVED") | .user.id] | unique | length'
 
           echo "approved-reviews-count=$APPROVED_REVIEWS_COUNT" >> "$GITHUB_OUTPUT"
 
