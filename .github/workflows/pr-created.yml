@@ -1,0 +1,20 @@
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+
+jobs:
+  add_waiting_review_label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add 'waiting review' label
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
+            -f labels[]='waiting review'

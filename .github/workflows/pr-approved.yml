@@ -1,9 +1,10 @@
 on:
   pull_request_review:
-    types: [submitted]
+    types:
+      - submitted
 
 jobs:
-  approved:
+  juggle_labels_on_approve:
     if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     steps:
@@ -23,3 +24,19 @@ jobs:
 
       - name: Echo approved reviews count
         run: echo "approved-reviews-count=[${{ steps.approved-reviews-counter.outputs.approved-reviews-count }}]"
+
+      - name: Remove 'waiting review' and add 'waiting QA' labels if the PR was approved
+        if: steps.approved-reviews-counter.outputs.approved-reviews-count >= 2
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            --method DELETE \
+            /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/waiting%20review \
+            || true
+          
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
+            -f labels[]='waiting QA'
