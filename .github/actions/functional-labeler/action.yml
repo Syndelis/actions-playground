@@ -71,7 +71,7 @@ runs:
         echo "DEBUG: (${{ inputs.then_add_labels }})"
 
         parsed_label_str=$(echo "${{ inputs.then_add_labels }}" | sed -E 's/(^|,)((\w|\s|-|_)+)/-f labels[]="\2" /g')
-        echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT
+        echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
 
     - name: Then | Add Labels
       if: env.PASSING == 'true' && github.event_name == 'pull_request' && ${{ steps.parse-add-labels.outputs.labels != '' }}
