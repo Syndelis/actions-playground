@@ -76,10 +76,11 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        gh api \
+        echo "DEBUG: ${{ steps.parse-add-labels.outputs.labels }}"
+
+        echo "${{ steps.parse-add-labels.outputs.labels }}" | xargs gh api \
           --method POST \
-          /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
-          ${{ steps.parse-add-labels.outputs.labels }}
+          /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels
 
     - name: Pre-Then | Sanitize Remove Labels
       id: parse-remove-labels
