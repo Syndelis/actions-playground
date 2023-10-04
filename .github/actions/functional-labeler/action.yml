@@ -74,7 +74,7 @@ runs:
       if: env.PASSING == 'true' && github.event_name == 'pull_request' && steps.parse-add-labels.outputs.labels != ''
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         gh api \
           --method POST \
@@ -94,7 +94,7 @@ runs:
       if: env.PASSING == 'true' && github.event_name == 'pull_request' && steps.parse-remove-labels.outputs.labels != ''
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
 
         # Delete each label individually
