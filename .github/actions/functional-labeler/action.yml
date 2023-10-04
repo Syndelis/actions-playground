@@ -68,7 +68,10 @@ runs:
       shell: bash
       run: |
         # Replaces a comma-separated list of labels with the pattern "-f labels[]=label1 -f labels[]=label2 ..."
-        echo "${{ inputs.then_add_labels }}" | sed -E 's/(^|,)((\w|\s|-|_)+)/-f labels[]="\2" /g' >> "$GITHUB_OUTPUT"
+        echo "DEBUG: (${{ inputs.then_add_labels }})"
+
+        parsed_label_str=$(echo "${{ inputs.then_add_labels }}" | sed -E 's/(^|,)((\w|\s|-|_)+)/-f labels[]="\2" /g')
+        echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT
 
     - name: Then | Add Labels
       if: env.PASSING == 'true' && github.event_name == 'pull_request' && ${{ steps.parse-add-labels.outputs.labels != '' }}
@@ -76,7 +79,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        echo "DEBUG: ${{ steps.parse-add-labels.outputs.labels }}"
+        echo "DEBUG: (${{ steps.parse-add-labels.outputs.labels }})"
 
         echo "${{ steps.parse-add-labels.outputs.labels }}" | xargs gh api \
           --method POST \
@@ -89,7 +92,11 @@ runs:
       run: |
         # Replaces spaces with %20
         # This is because the GitHub API for deleting a single label requires the label name to be URL encoded
-        echo "${{ inputs.then_remove_labels }}" | sed 's/ /%20/g' >> "$GITHUB_OUTPUT"
+
+        echo "DEBUG: (${{ inputs.then_remove_labels }})"
+
+        parsed_label_str=$(echo "${{ inputs.then_remove_labels }}" | sed 's/ /%20/g')
+        echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
     
     - name: Then | Remove Labels
       if: env.PASSING == 'true' && github.event_name == 'pull_request' && steps.parse-remove-labels.outputs.labels != ''
@@ -99,6 +106,8 @@ runs:
       run: |
 
         # Delete each label individually
+
+        echo "DEBUG: (${{ steps.parse-remove-labels.outputs.labels }})"
 
         remaining_labels=${{ steps.parse-remove-labels.outputs.labels }}
         while [ -n "$remaining_labels" ]; do
