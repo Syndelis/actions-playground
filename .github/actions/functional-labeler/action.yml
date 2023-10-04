@@ -1,0 +1,116 @@
+name: 'Declarative Labeler'
+author: 'Brenno Lemos'
+description: 'TODO'
+
+inputs:
+  github_token:
+    description: 'GitHub Token'
+    required: true
+  
+  when_approved_count:
+    description: 'TODO'
+    default: 0
+  
+  when_pr_is:
+    description: 'TODO'
+    choices:
+      - draft
+      - ready
+    default: ready
+  
+  then_add_labels:
+    description: 'TODO'
+    default: ''
+  
+  then_remove_labels:
+    description: 'TODO'
+    default: ''
+
+runs:
+  using: composite
+  steps:
+
+    - name: Setup | Environment
+      shell: bash
+      run: echo "PASSING=true" >> "$GITHUB_ENV"
+
+    - name: Pre-When | Count Approves
+      id: approved-reviews-counter
+      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.when_approved_count > 0
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        APPROVED_REVIEWS_COUNT=$(gh api \
+          /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
+          --jq '[.[] | select(.state == "APPROVED") | .user.id] | unique | length')
+
+        echo "count=$APPROVED_REVIEWS_COUNT" >> "$GITHUB_OUTPUT"
+
+    - name: When | Approved Count
+      if: env.PASSING == 'true' && steps.approved-reviews-counter.outputs.count < inputs.when_approved_count
+      shell: bash
+      run: echo "PASSING=false" >> "$GITHUB_ENV"
+    
+    - name: When | PR is Draft
+      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.when_pr_is == 'draft' && github.event.pull_request.draft == false
+      shell: bash
+      run: echo "PASSING=false" >> "$GITHUB_ENV"
+    
+    - name: When | PR is Ready
+      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.when_pr_is == 'ready' && github.event.pull_request.draft == true
+      shell: bash
+      run: echo "PASSING=false" >> "$GITHUB_ENV"
+
+    - name: Pre-Then | Parse Add Labels
+      id: parse-add-labels
+      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.then_add_labels != ''
+      shell: bash
+      run: |
+        # Replaces a comma-separated list of labels with the pattern "-f labels[]=label1 -f labels[]=label2 ..."
+        echo "${{ inputs.then_add_labels }}" | sed -E 's/(^|,)((\w|\s|-|_)+)/-f labels[]="\2" /g' >> "$GITHUB_OUTPUT"
+
+    - name: Then | Add Labels
+      if: env.PASSING == 'true' && github.event_name == 'pull_request' && steps.parse-add-labels.outputs.labels != ''
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh api \
+          --method POST \
+          /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
+          ${{ steps.parse-add-labels.outputs.labels }}
+
+    - name: Pre-Then | Sanitize Remove Labels
+      id: parse-remove-labels
+      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.then_remove_labels != ''
+      shell: bash
+      run: |
+        # Replaces spaces with %20
+        # This is because the GitHub API for deleting a single label requires the label name to be URL encoded
+        echo "${{ inputs.then_remove_labels }}" | sed 's/ /%20/g' >> "$GITHUB_OUTPUT"
+    
+    - name: Then | Remove Labels
+      if: env.PASSING == 'true' && github.event_name == 'pull_request' && steps.parse-remove-labels.outputs.labels != ''
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+
+        # Delete each label individually
+
+        remaining_labels=${{ steps.parse-remove-labels.outputs.labels }}
+        while [ -n "$remaining_labels" ]; do
+
+          curr_label=${remaining_labels%%,*} # Everything up to a comma
+
+          gh api \
+            --method DELETE \
+            "/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/$curr_label" \
+            || true
+
+          [ "$remaining_labels" = "${remaining_labels/,/}" ] \
+            && remaining_labels='' \
+            || remaining_labels=${remaining_labels#*,} # Everything after a comma
+        
+        done

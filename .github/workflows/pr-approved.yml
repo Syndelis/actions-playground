@@ -10,33 +10,13 @@ jobs:
     steps:
       - run: echo "This PR was approved"
 
-      - name: Count approved reviews
-        id: approved-reviews-counter
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          APPROVED_REVIEWS_COUNT=$(gh api \
-            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
-            --jq '[.[] | select(.state == "APPROVED") | .user.id] | unique | length')
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-          echo "approved-reviews-count=$APPROVED_REVIEWS_COUNT" >> "$GITHUB_OUTPUT"
-
-      - name: Echo approved reviews count
-        run: echo "approved-reviews-count=[${{ steps.approved-reviews-counter.outputs.approved-reviews-count }}]"
-
-      - name: Remove 'waiting review' and add 'waiting QA' labels if the PR was approved
-        if: steps.approved-reviews-counter.outputs.approved-reviews-count >= 1
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api \
-            --method DELETE \
-            /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/waiting%20review \
-            || true
-          
-          gh api \
-            --method POST \
-            /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
-            -f labels[]='waiting QA'
+      - name: Add Label Conditionally
+        uses: ./.github/actions/functional-labeler
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          when_approved_count: 1
+          then_add_labels: 'approved1,approved2'
+          then_remove_labels: 'waiting-1,waiting_2'
