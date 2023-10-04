@@ -7,13 +7,12 @@ inputs:
     description: 'GitHub Token'
     required: true
 
+env:
+  PASSING: true
+
 runs:
   using: composite
   steps:
-
-    - name: Setup
-      shell: bash
-      run: echo "PASSING=true" >> "$GITHUB_ENV"
 
     - name: A
       id: a
