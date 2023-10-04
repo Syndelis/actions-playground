@@ -14,12 +14,18 @@ runs:
   using: composite
   steps:
 
+    - name: Setup
+      shell: bash
+      run: |
+        echo "PASSING=true" >> "$GITHUB_ENV"
+
     - name: Check env
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         echo "PASSING=$PASSING"
+        echo "PASSING=${{ env.PASSING }}"
         env
 
     - name: A
