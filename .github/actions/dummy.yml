@@ -1,0 +1,46 @@
+name: 'Dummy'
+author: 'Brenno Lemos'
+description: 'TODO'
+
+inputs:
+  github_token:
+    description: 'GitHub Token'
+    required: true
+  
+  run_a:
+    description: 'A'
+    default: false
+  
+  run_b:
+    description: 'B'
+    default: false
+
+runs:
+  using: composite
+  steps:
+
+    - name: A
+      id: a
+      if: ${{ inputs.run_a }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        echo "eight=8" >> "$GITHUB_OUTPUT"
+    
+    - name: B
+      id: b
+      if: ${{ inputs.run_b }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        echo "nine=9" >> "$GITHUB_OUTPUT"
+    
+    - name: Validate outputs
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        echo "A said : ${{ steps.a.outputs.eight }}"
+        echo "B said : ${{ steps.b.outputs.nine }}"

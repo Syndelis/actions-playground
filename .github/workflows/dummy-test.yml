@@ -1,0 +1,15 @@
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  dummy_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run dummy action
+        uses: ./.github/actions/dummy
+        with:
+          run_a: false
+          run_b: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
