@@ -16,7 +16,7 @@ jobs:
       - name: Add Label Conditionally
         uses: ./.github/actions/functional-labeler
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           when_approved_count: 1
           then_add_labels: 'approved1,approved2'
           then_remove_labels: 'waiting-1,waiting_2'

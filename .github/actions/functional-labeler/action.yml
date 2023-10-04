@@ -71,7 +71,7 @@ runs:
         echo "${{ inputs.then_add_labels }}" | sed -E 's/(^|,)((\w|\s|-|_)+)/-f labels[]="\2" /g' >> "$GITHUB_OUTPUT"
 
     - name: Then | Add Labels
-      if: env.PASSING == 'true' && github.event_name == 'pull_request' && steps.parse-add-labels.outputs.labels != ''
+      if: env.PASSING == 'true' && github.event_name == 'pull_request' && ${{ steps.parse-add-labels.outputs.labels != '' }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
