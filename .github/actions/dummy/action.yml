@@ -10,10 +10,12 @@ inputs:
   run_a:
     description: 'A'
     default: false
+    type: boolean
   
   run_b:
     description: 'B'
     default: false
+    type: boolean
 
 runs:
   using: composite
