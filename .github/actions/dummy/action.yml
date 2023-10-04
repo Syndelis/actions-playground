@@ -6,33 +6,27 @@ inputs:
   github_token:
     description: 'GitHub Token'
     required: true
-  
-  run_a:
-    description: 'A'
-    default: false
-    type: boolean
-  
-  run_b:
-    description: 'B'
-    default: false
-    type: boolean
 
 runs:
   using: composite
   steps:
 
+    - name: Setup
+      shell: bash
+      run: echo "PASSING=true" >> "$GITHUB_ENV"
+
     - name: A
       id: a
-      if: ${{ inputs.run_a == 'true' }}
+      if: env.PASSING == 'true'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        echo "eight=8" >> "$GITHUB_OUTPUT"
+        echo "PASSING=false" >> "$GITHUB_ENV"
     
     - name: B
       id: b
-      if: ${{ inputs.run_b == 'true' }}
+      if: env.PASSING == 'true'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
