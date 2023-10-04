@@ -23,7 +23,7 @@ runs:
 
     - name: A
       id: a
-      if: ${{ inputs.run_a }}
+      if: ${{ inputs.run_a == true }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -32,7 +32,7 @@ runs:
     
     - name: B
       id: b
-      if: ${{ inputs.run_b }}
+      if: ${{ inputs.run_b == true }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
