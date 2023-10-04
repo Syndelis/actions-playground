@@ -33,7 +33,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         echo "PASSING=false" >> "$GITHUB_ENV"
-        echo "eight=8" >> "$GITHUB_OUTPUT
+        echo "eight=8" >> "$GITHUB_OUTPUT"
     
     - name: B
       id: b
