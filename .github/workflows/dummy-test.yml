@@ -7,6 +7,9 @@ jobs:
   dummy_test:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
       - name: Run dummy action
         uses: ./.github/actions/dummy
         with:
