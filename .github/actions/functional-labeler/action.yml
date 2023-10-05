@@ -95,7 +95,7 @@ runs:
 
         echo "[Pre-Then | Sanitize Remove Labels] DEBUG: (${{ inputs.then_remove_labels }})"
 
-        parsed_label_str=$(echo '${{ inputs.then_remove_labels }}'' | sed 's/ /%20/g')
+        parsed_label_str=$(echo '${{ inputs.then_remove_labels }}' | sed 's/ /%20/g')
         echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
     
     - name: Then | Remove Labels
