@@ -4,6 +4,7 @@ on:
       - opened
       - reopened
       - ready_for_review
+      - converted_to_draft
 
 jobs:
   add_waiting_review_label:
