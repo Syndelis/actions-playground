@@ -68,7 +68,7 @@ runs:
       shell: bash
       run: |
         # Replaces a comma-separated list of labels with the pattern "-f labels[]=label1 -f labels[]=label2 ..."
-        echo "DEBUG: (${{ inputs.then_add_labels }})"
+        echo "[Pre-Then | Parse Add Labels] DEBUG: (${{ inputs.then_add_labels }})"
 
         parsed_label_str=$(echo "${{ inputs.then_add_labels }}" | sed -E 's/(^|,)((\w|\s|-|_)+)/-f labels[]="\2" /g')
         echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
@@ -79,27 +79,27 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        echo "DEBUG: (${{ steps.parse-add-labels.outputs.labels }})"
+        echo "[Then | Add Labels] DEBUG: (${{ steps.parse-add-labels.outputs.labels }})"
 
         echo "${{ steps.parse-add-labels.outputs.labels }}" | xargs gh api \
           --method POST \
           /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels
 
     - name: Pre-Then | Sanitize Remove Labels
-      id: parse-remove-labels
+      id: sanitize-remove-labels
       if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.then_remove_labels != ''
       shell: bash
       run: |
         # Replaces spaces with %20
         # This is because the GitHub API for deleting a single label requires the label name to be URL encoded
 
-        echo "DEBUG: (${{ inputs.then_remove_labels }})"
+        echo "[Pre-Then | Sanitize Remove Labels] DEBUG: (${{ inputs.then_remove_labels }})"
 
         parsed_label_str=$(echo "${{ inputs.then_remove_labels }}" | sed 's/ /%20/g')
         echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
     
     - name: Then | Remove Labels
-      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && steps.parse-remove-labels.outputs.labels != ''
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && ${{ steps.sanitize-remove-labels.outputs.labels != '' }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -107,9 +107,9 @@ runs:
 
         # Delete each label individually
 
-        echo "DEBUG: (${{ steps.parse-remove-labels.outputs.labels }})"
+        echo "[Then | Remove Labels] DEBUG: (${{ steps.sanitize-remove-labels.outputs.labels }})"
 
-        remaining_labels=${{ steps.parse-remove-labels.outputs.labels }}
+        remaining_labels=${{ steps.sanitize-remove-labels.outputs.labels }}
         while [ -n "$remaining_labels" ]; do
 
           curr_label=${remaining_labels%%,*} # Everything up to a comma
