@@ -41,9 +41,9 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        APPROVED_REVIEWS_COUNT=$(gh api \
-          /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
-          --jq '[.[] | select(.state == "APPROVED") | .user.id] | unique | length')
+        APPROVED_REVIEWS_COUNT=$(gh pr view ${{ github.event.pull_request.number }} \
+          --json latestReviews \
+          --jq '.latestReviews | [.[] | select(.state == "APPROVED") | .author.login] | unique | length')
 
         echo "count=$APPROVED_REVIEWS_COUNT" >> "$GITHUB_OUTPUT"
 
