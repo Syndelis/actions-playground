@@ -19,3 +19,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           when_pr_is: ready
           then_add_labels: 'waiting-1,waiting_2,esse label nao deve ser removido'
+          also_reverse: true

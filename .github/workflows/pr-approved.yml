@@ -20,3 +20,4 @@ jobs:
           when_approved_count: 2
           then_add_labels: 'approved1,approved2'
           then_remove_labels: 'waiting-1,waiting_2'
+          also_reverse: true
