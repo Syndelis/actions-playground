@@ -36,7 +36,10 @@ runs:
 
     - name: Setup | Environment
       shell: bash
-      run: echo "PASSING=true" >> "$GITHUB_ENV"
+      run: |
+        echo "PASSING=true" >> "$GITHUB_ENV"
+        echo "SIDE_EFFECT_ADD_LABELS='${{ inputs.then_add_labels }}'" >> "$GITHUB_ENV"
+        echo "SIDE_EFFECT_REMOVE_LABELS='${{ inputs.then_remove_labels }}'" >> "$GITHUB_ENV"
 
     - name: Pre-When | Count Approves
       id: approved-reviews-counter
@@ -65,51 +68,37 @@ runs:
       if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.when_pr_is == 'ready' && github.event.pull_request.draft == true
       shell: bash
       run: echo "PASSING=false" >> "$GITHUB_ENV"
+    
+    - name: Run Reverse | Reverse Add/Remove Labels on Condition Fail
+      if: env.PASSING == 'false' && inputs.also_reverse == 'true'
+      shell: bash
+      run: |
+        user_requested_add_labels='${{ env.SIDE_EFFECT_ADD_LABELS }}'
+        user_requested_remove_labels='${{ env.SIDE_EFFECT_REMOVE_LABELS }}'
+
+        echo "SIDE_EFFECT_ADD_LABELS='$user_requested_remove_labels'" >> "$GITHUB_ENV"
+        echo "SIDE_EFFECT_REMOVE_LABELS='$user_requested_add_labels'" >> "$GITHUB_ENV"
 
     - name: Then | Add Labels
-      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.then_add_labels
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && env.SIDE_EFFECT_ADD_LABELS
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        echo "[Then | Add Labels] DEBUG: (${{ inputs.then_add_labels }})"
+        echo "[Then | Add Labels] DEBUG: (${{ env.SIDE_EFFECT_ADD_LABELS }})"
         
         gh pr --repo '${{ github.repository }}' \
           edit '${{ github.event.pull_request.number }}' \
-          --add-label '${{ inputs.then_add_labels }}'
+          --add-label '${{ env.SIDE_EFFECT_ADD_LABELS }}'
 
     - name: Then | Remove Labels
-      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.then_remove_labels
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && env.SIDE_EFFECT_REMOVE_LABELS
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        echo "[Then | Remove Labels] DEBUG: (${{ inputs.then_remove_labels }})"
+        echo "[Then | Remove Labels] DEBUG: (${{ env.SIDE_EFFECT_REMOVE_LABELS }})"
 
         gh pr --repo '${{ github.repository }}' \
           edit '${{ github.event.pull_request.number }}' \
-          --remove-label '${{ inputs.then_remove_labels }}'
-
-    - name: Reverse-Then | Remove 'Add' Labels
-      if: inputs.also_reverse == 'true' && env.PASSING == 'false' && startsWith(github.event_name, 'pull_request') && inputs.then_add_labels
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-      run: |
-        echo "[Invert-Then | Remove 'Add' Labels] DEBUG: (${{ inputs.then_add_labels }})"
-
-        gh pr --repo '${{ github.repository }}' \
-          edit '${{ github.event.pull_request.number }}' \
-          --remove-label '${{ inputs.then_add_labels }}'
-    
-    - name: Reverse-Then | Add 'Remove' Labels
-      if: inputs.also_reverse == 'true' && env.PASSING == 'false' && startsWith(github.event_name, 'pull_request') && inputs.then_remove_labels
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-      run: |
-        echo "[Then | Add Labels] DEBUG: (${{ inputs.then_remove_labels }})"
-        
-        gh pr --repo '${{ github.repository }}' \
-          edit '${{ github.event.pull_request.number }}' \
-          --add-label '${{ inputs.then_remove_labels }}'
+          --remove-label '${{ env.SIDE_EFFECT_REMOVE_LABELS }}'
