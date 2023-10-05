@@ -36,7 +36,7 @@ runs:
 
     - name: Pre-When | Count Approves
       id: approved-reviews-counter
-      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.when_approved_count > 0
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.when_approved_count > 0
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -53,18 +53,18 @@ runs:
       run: echo "PASSING=false" >> "$GITHUB_ENV"
     
     - name: When | PR is Draft
-      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.when_pr_is == 'draft' && github.event.pull_request.draft == false
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.when_pr_is == 'draft' && github.event.pull_request.draft == false
       shell: bash
       run: echo "PASSING=false" >> "$GITHUB_ENV"
     
     - name: When | PR is Ready
-      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.when_pr_is == 'ready' && github.event.pull_request.draft == true
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.when_pr_is == 'ready' && github.event.pull_request.draft == true
       shell: bash
       run: echo "PASSING=false" >> "$GITHUB_ENV"
 
     - name: Pre-Then | Parse Add Labels
       id: parse-add-labels
-      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.then_add_labels != ''
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.then_add_labels != ''
       shell: bash
       run: |
         # Replaces a comma-separated list of labels with the pattern "-f labels[]=label1 -f labels[]=label2 ..."
@@ -74,7 +74,7 @@ runs:
         echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
 
     - name: Then | Add Labels
-      if: env.PASSING == 'true' && github.event_name == 'pull_request' && ${{ steps.parse-add-labels.outputs.labels != '' }}
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && ${{ steps.parse-add-labels.outputs.labels != '' }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -87,7 +87,7 @@ runs:
 
     - name: Pre-Then | Sanitize Remove Labels
       id: parse-remove-labels
-      if: env.PASSING == 'true' && github.event_name == 'pull_request' && inputs.then_remove_labels != ''
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.then_remove_labels != ''
       shell: bash
       run: |
         # Replaces spaces with %20
@@ -99,7 +99,7 @@ runs:
         echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
     
     - name: Then | Remove Labels
-      if: env.PASSING == 'true' && github.event_name == 'pull_request' && steps.parse-remove-labels.outputs.labels != ''
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && steps.parse-remove-labels.outputs.labels != ''
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
