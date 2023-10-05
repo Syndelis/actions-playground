@@ -74,7 +74,7 @@ runs:
         echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
 
     - name: Then | Add Labels
-      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && ${{ steps.parse-add-labels.outputs.labels != '' }}
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && steps.parse-add-labels.outputs.labels
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -99,7 +99,7 @@ runs:
         echo "labels=$parsed_label_str" >> "$GITHUB_OUTPUT"
     
     - name: Then | Remove Labels
-      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && ${{ steps.sanitize-remove-labels.outputs.labels != '' }}
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && steps.sanitize-remove-labels.outputs.labels
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
