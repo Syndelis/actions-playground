@@ -72,9 +72,20 @@ runs:
       if: env.PASSING == 'true' && steps.approved-reviews-counter.outputs.count < inputs.when_approved_count
       shell: bash
       run: echo "PASSING=false" >> "$GITHUB_ENV"
-    
+
+    - name: Pre-When | Check if Review Decision is Approved
+      id: review-decision
+      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.when_approved == 'true'
+      shell: bash
+      run: |
+        review_decision=$(gh pr --repo '${{ github.repository }}' \
+          view ${{ github.event.pull_request.number }} \
+          --json reviewDecision --jq .reviewDecision)
+        
+        echo "review_decision=$review_decision" >> "$GITHUB_OUTPUT"
+
     - name: When | Approved
-      if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && github.event.review.state != 'approved'
+      if: env.PASSING == 'true' && steps.review-decision.outputs.review_decision != 'APPROVED'
       shell: bash
       run: echo "PASSING=false" >> "$GITHUB_ENV"
     
