@@ -70,7 +70,7 @@ runs:
       run: echo "PASSING=false" >> "$GITHUB_ENV"
     
     - name: When | Approved
-      if: env.PASSING == 'true' && inputs.when_approved && github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
+      if: env.PASSING == 'true' && inputs.when_approved && github.event_name == 'pull_request_review' && github.event.review.state != 'approved'
       shell: bash
       run: echo "PASSING=false" >> "$GITHUB_ENV"
     
