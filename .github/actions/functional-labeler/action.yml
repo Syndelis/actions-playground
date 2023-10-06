@@ -17,6 +17,10 @@ inputs:
       - draft
       - ready
     default: ready
+
+  when_approved:
+    description: 'TODO'
+    default: false
   
   then_add_labels:
     description: 'TODO'
@@ -57,6 +61,11 @@ runs:
 
     - name: When | Approved Count
       if: env.PASSING == 'true' && steps.approved-reviews-counter.outputs.count < inputs.when_approved_count
+      shell: bash
+      run: echo "PASSING=false" >> "$GITHUB_ENV"
+    
+    - name: When | Approved
+      if: env.PASSING == 'true' && github.event_name == 'pull_request_review' && inputs.when_approved == 'true' && github.event.pull_request.approved == false
       shell: bash
       run: echo "PASSING=false" >> "$GITHUB_ENV"
     
