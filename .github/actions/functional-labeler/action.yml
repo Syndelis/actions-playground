@@ -1,33 +1,41 @@
 name: 'Declarative Labeler'
 author: 'Brenno Lemos'
-description: 'TODO'
+description: 'Action para adicionar e remover labels de PRs e issues baseado em regras declarativas.'
 
 inputs:
   github_token:
-    description: 'GitHub Token'
+    description: 'Token do GitHub. Geralmente estará em `secrets.GITHUB_TOKEN`. Necessário porque a API do GitHub necessita de permissões para alterar Pull Requests.'
     required: true
   
   when_approved_count:
-    description: 'TODO'
+    description: 'Número de aprovações necessário para a action passar. Se for 0, não será necessário nenhuma aprovação. O padrão é 0.'
     default: 0
   
-  when_pr_is:
+  when_approved:
     description: 'TODO'
+    default: false
+
+  when_pr_is:
+    description: 'Checa se o PR é draft ou não. Os valores aceitos são `draft` e `ready`. O padrão é `ready`.'
     choices:
       - draft
       - ready
     default: ready
   
   then_add_labels:
-    description: 'TODO'
+    description: 'Uma string separada por vírgulas (sem espaços entre elementos) com os nomes dos labels que serão adicionados. O padrão é vazio, ou seja, nenhum.'
     default: ''
   
   then_remove_labels:
-    description: 'TODO'
+    description: 'Uma string separada por vírgulas (sem espaços entre elementos) com os nomes dos labels que serão removidos. O padrão é vazio, ou seja, nenhum.'
     default: ''
   
   also_reverse:
-    description: 'TODO'
+    description: |
+      Define se a action também deve rodar em modo reverso. Se sim, a action inverterá os labels a serem adicinados e removidos no caso de alguma condição falhar.
+      Por exemplo, quando `true`, a action pode ser utilizada para adicionar o label `waiting QA` e remover o label `waiting review`, quando o PR é aprovado 2 vezes,
+      mas que também remove os label `waiting QA` e adiciona o label `waiting review` de volta quando uma ou mais das aprovações são *dismissed*. O padrão é `false`.
+
     default: false
 
 runs:
@@ -39,8 +47,8 @@ runs:
       run: |
         echo "PASSING=true" >> "$GITHUB_ENV"
         echo "TRIGGER_SIDE_EFFECTS=false" >> "$GITHUB_ENV"
-        echo "SIDE_EFFECT_ADD_LABELS='${{ inputs.then_add_labels }}'" >> "$GITHUB_ENV"
-        echo "SIDE_EFFECT_REMOVE_LABELS='${{ inputs.then_remove_labels }}'" >> "$GITHUB_ENV"
+        echo "SIDE_EFFECT_ADD_LABELS=${{ inputs.then_add_labels }}" >> "$GITHUB_ENV"
+        echo "SIDE_EFFECT_REMOVE_LABELS=${{ inputs.then_remove_labels }}" >> "$GITHUB_ENV"
 
     - name: Pre-When | Count Approves
       id: approved-reviews-counter
@@ -49,7 +57,8 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        approved_reviews_count=$(gh pr view ${{ github.event.pull_request.number }} \
+        approved_reviews_count=$(gh pr --repo '${{ github.repository }}' \
+          view ${{ github.event.pull_request.number }} \
           --json latestReviews \
           --jq '.latestReviews | [.[] | select(.state == "APPROVED") | .author.login] | unique | length')
 
@@ -57,6 +66,11 @@ runs:
 
     - name: When | Approved Count
       if: env.PASSING == 'true' && steps.approved-reviews-counter.outputs.count < inputs.when_approved_count
+      shell: bash
+      run: echo "PASSING=false" >> "$GITHUB_ENV"
+    
+    - name: When | Approved
+      if: env.PASSING == 'true' && inputs.when_approved && github.event_name == 'pull_request_review' && github.event.pull_request.approved == false
       shell: bash
       run: echo "PASSING=false" >> "$GITHUB_ENV"
     
@@ -75,10 +89,9 @@ runs:
       if: env.PASSING == 'false' && inputs.also_reverse == 'true'
       shell: bash
       run: |
-        user_requested_add_labels='${{ env.SIDE_EFFECT_ADD_LABELS }}'
-        user_requested_remove_labels='${{ env.SIDE_EFFECT_REMOVE_LABELS }}'
+        user_requested_add_labels="${{ env.SIDE_EFFECT_ADD_LABELS }}"
+        user_requested_remove_labels="${{ env.SIDE_EFFECT_REMOVE_LABELS }}"
 
-        # This is already quoted because of the setup step
         echo "SIDE_EFFECT_ADD_LABELS=$user_requested_remove_labels" >> "$GITHUB_ENV"
         echo "SIDE_EFFECT_REMOVE_LABELS=$user_requested_add_labels" >> "$GITHUB_ENV"
 
@@ -99,7 +112,7 @@ runs:
         
         gh pr --repo '${{ github.repository }}' \
           edit '${{ github.event.pull_request.number }}' \
-          --add-label '${{ env.SIDE_EFFECT_ADD_LABELS }}'
+          --add-label "${{ env.SIDE_EFFECT_ADD_LABELS }}"
 
     - name: Then | Remove Labels
       if: env.TRIGGER_SIDE_EFFECTS == 'true' && startsWith(github.event_name, 'pull_request') && env.SIDE_EFFECT_REMOVE_LABELS
@@ -111,4 +124,4 @@ runs:
 
         gh pr --repo '${{ github.repository }}' \
           edit '${{ github.event.pull_request.number }}' \
-          --remove-label '${{ env.SIDE_EFFECT_REMOVE_LABELS }}'
+          --remove-label "${{ env.SIDE_EFFECT_REMOVE_LABELS }}"
