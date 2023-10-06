@@ -21,7 +21,7 @@ jobs:
         uses: ./.github/actions/functional-labeler
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          when_approved: true
+          when_review_status: APPROVED
           then_add_labels: approved1,approved2
           then_remove_labels: waiting-1,waiting_2
           also_reverse: true
