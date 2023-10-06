@@ -77,6 +77,8 @@ runs:
       id: review-decision
       if: env.PASSING == 'true' && startsWith(github.event_name, 'pull_request') && inputs.when_approved == 'true'
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         review_decision=$(gh pr --repo '${{ github.repository }}' \
           view ${{ github.event.pull_request.number }} \
