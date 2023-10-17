@@ -13,11 +13,11 @@ jobs:
       - name: Update Minor Tag
         shell: bash
         run: |
-          MINOR_TAG=$(echo '${{ github.release.tag_name }}' | grep -Po 'v\d+\.\d+')
+          MINOR_TAG=$(echo '${{ github.event.release.tag_name }}' | grep -Po 'v\d+\.\d+')
           git tag -f "$MINOR_TAG"
 
       - name: Update Major Tag
         shell: bash
         run: |
-          MAJOR_TAG=$(echo '${{ github.release.tag_name }}' | grep -Po 'v\d+')
+          MAJOR_TAG=$(echo '${{ github.event.release.tag_name }}' | grep -Po 'v\d+')
           git tag -f "$MAJOR_TAG"
