@@ -10,6 +10,9 @@ jobs:
   bump-tags-semver:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Update Minor Tag
         shell: bash
         run: |
@@ -21,3 +24,7 @@ jobs:
         run: |
           MAJOR_TAG=$(echo '${{ github.event.release.tag_name }}' | grep -Po 'v\d+')
           git tag -f "$MAJOR_TAG"
+
+      - name: Push Changes
+        shell: bash
+        run: git push -f --tags
