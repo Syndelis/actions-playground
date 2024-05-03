@@ -2,6 +2,7 @@ on:
   pull_request:
     types:
       - opened
+      - closed
 
 jobs:
   assign_ticket:
@@ -9,6 +10,20 @@ jobs:
     permissions: write-all
 
     steps:
+      - name: Environment Setup
+        shell: bash
+        run: echo "NEXT_STATUS=Todo" >> "$GITHUB_ENV"
+
+      - name: Decided to move issue to 'In Progress'
+        if: ${{ github.event.pull_request.merged }} == false && !${{ github.event.pull_request.closed_at }}
+        shell: bash
+        run: echo "NEXT_STATUS=In Progress" >> "$GITHUB_ENV"
+
+      - name: Decided to move issue to 'Done'
+        if: ${{ github.event.pull_request.merged }} == true
+        shell: bash
+        run: echo "NEXT_STATUS=Done" >> "$GITHUB_ENV"
+
       - name: Gather related closing issue and its project relation
         id: closing_issue
         shell: bash
@@ -82,8 +97,8 @@ jobs:
             echo $PROJECT_ITEM | jq '.project.fields.edges[] | select(.node.name == "Status")'
           )
           FIELD_STATUS_ID=$(echo $FIELD_STATUS | jq .node.id --raw-output)
-          FIELD_STATUS_IN_PROGRESS_OPTION_ID=$(
-            echo $FIELD_STATUS | jq '.node.options[] | select(.name == "In Progress") | .id' --raw-output
+          FIELD_STATUS_NEXT_VALUE_ID=$(
+            echo $FIELD_STATUS | jq '.node.options[] | select(.name == "${{ env.NEXT_STATUS }}") | .id' --raw-output
           )
 
           echo "title=$ISSUE_TITLE" >> "$GITHUB_OUTPUT"
@@ -91,9 +106,10 @@ jobs:
           echo "project_item_id=$PROJECT_ITEM_ID" >> "$GITHUB_OUTPUT"
           echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
           echo "status_id=$FIELD_STATUS_ID" >> "$GITHUB_OUTPUT"
-          echo "in_progress_id=$FIELD_STATUS_IN_PROGRESS_OPTION_ID" >> "$GITHUB_OUTPUT"
+          echo "next_status_id=$FIELD_STATUS_NEXT_VALUE_ID" >> "$GITHUB_OUTPUT"
 
       - name: Assign related issue to yourself
+        if: ${{ github.event.pull_request.merged }} == false
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
@@ -103,7 +119,7 @@ jobs:
             edit ${{ steps.closing_issue.outputs.number }} \
             --add-assignee ${{ github.event.pull_request.user.login }}
 
-      - name: Move issue to 'In Progress'
+      - name: Move issue in board
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
@@ -112,4 +128,4 @@ jobs:
             --project-id ${{ steps.closing_issue.outputs.project_id }} \
             --id ${{ steps.closing_issue.outputs.project_item_id }} \
             --field-id ${{ steps.closing_issue.outputs.status_id }} \
-            --single-select-option-id ${{ steps.closing_issue.outputs.in_progress_id }}
+            --single-select-option-id ${{ steps.closing_issue.outputs.next_status_id }}
