@@ -10,6 +10,8 @@ jobs:
       - name: Gather related closing issue and its project relation
         id: closing_issue
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           RELATED_ISSUE=$(gh api graphql \
             -F owner=${{ github.repository_owner }} \
@@ -43,6 +45,8 @@ jobs:
 
       - name: Assign related issue to yourself
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh issue \
             --repo ${{ github.repository }} \
@@ -51,6 +55,8 @@ jobs:
 
       - name: Move issue to 'In Progress'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh project item-edit \
             --project-id ${{ steps.closing_issue.outputs.project_id }} \
