@@ -7,6 +7,10 @@ jobs:
   assign_ticket:
     runs-on: ubuntu-latest
     steps:
+      - name: Stall for 10s so GitHub can gather its information
+        shell: bash
+        run: sleep 10
+
       - name: Gather related closing issue and its project relation
         id: closing_issue
         shell: bash
