@@ -15,7 +15,7 @@ jobs:
         run: |
           RELATED_ISSUE=$(gh api graphql \
             -F owner=${{ github.repository_owner }} \
-            -F repository=${{ github.event.repository.name }}
+            -F repository=${{ github.event.repository.name }} \
             -F prNumber=${{ github.event.pull_request.number }} \
             -F query=@.github/workflows/files/gh_related_issue.graphql \
             --jq '.data.repository.pullRequest.closingIssuesReferences.edges[0].node' \
