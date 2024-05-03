@@ -86,7 +86,7 @@ jobs:
           echo "number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
           echo "project_item_id=$PROJECT_ITEM_ID" >> "$GITHUB_OUTPUT"
           echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
-          echo "status_id=$FIELD_STATUS_IDS" >> "$GITHUB_OUTPUT"
+          echo "status_id=$FIELD_STATUS_ID" >> "$GITHUB_OUTPUT"
           echo "in_progress_id=$FIELD_STATUS_IN_PROGRESS_OPTION_ID" >> "$GITHUB_OUTPUT"
 
       - name: Assign related issue to yourself
