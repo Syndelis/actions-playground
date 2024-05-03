@@ -3,6 +3,7 @@ on:
     types:
       - opened
       - closed
+      - reopened
 
 jobs:
   assign_ticket:
@@ -15,7 +16,7 @@ jobs:
         run: echo "NEXT_STATUS=Todo" >> "$GITHUB_ENV"
 
       - name: Decided to move issue to 'In Progress'
-        if: ${{ github.event.pull_request.merged == false }} && ${{ !github.event.pull_request.closed_at }}
+        if: ${{ github.event.pull_request.merged == false && !github.event.pull_request.closed_at }}
         shell: bash
         run: echo "NEXT_STATUS=In Progress" >> "$GITHUB_ENV"
 
