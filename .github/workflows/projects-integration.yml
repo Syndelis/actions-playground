@@ -71,6 +71,8 @@ jobs:
             --jq '.data.repository.pullRequest.closingIssuesReferences.edges[0].node' \
           )
 
+          echo "DEBUG>>RELATED_ISSUE = $RELATED_ISSUE"
+
           ISSUE_TITLE=$(echo $RELATED_ISSUE | jq .title --raw-output)
           ISSUE_NUMBER=$(echo $RELATED_ISSUE | jq .number --raw-output)
 
