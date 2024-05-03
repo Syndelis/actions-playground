@@ -1,0 +1,43 @@
+query($prNumber: Int!, $owner: String!, $repository: String!) {
+    repository(owner: $owner, name: $repository) {
+        pullRequest(number: $prNumber) {
+            id
+            closingIssuesReferences (first: 1) {
+                edges {
+                    node {
+                        id
+                        body
+                        number
+                        title
+                        projectItems(first: 1) {
+                            edges {
+                                node {
+                                    id
+                                    type
+                                    project {
+                                        id
+                                        number
+                                        fields(first: 50) {
+                                            edges {
+                                                node {
+                                                    ... on ProjectV2SingleSelectField {
+                                                        id
+                                                        name
+                                                        options {
+                                                            id
+                                                            name
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

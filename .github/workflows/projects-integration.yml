@@ -1,0 +1,132 @@
+on:
+  pull_request:
+    types:
+      - opened
+      - closed
+      - reopened
+
+jobs:
+  assign_ticket:
+    runs-on: ubuntu-latest
+    permissions: write-all
+
+    steps:
+      - name: Environment Setup
+        shell: bash
+        run: echo "NEXT_STATUS=Todo" >> "$GITHUB_ENV"
+
+      - name: Decided to move issue to 'In Progress'
+        if: ${{ github.event.pull_request.merged == false && !github.event.pull_request.closed_at }}
+        shell: bash
+        run: echo "NEXT_STATUS=In Progress" >> "$GITHUB_ENV"
+
+      - name: Decided to move issue to 'Done'
+        if: ${{ github.event.pull_request.merged == true }}
+        shell: bash
+        run: echo "NEXT_STATUS=Done" >> "$GITHUB_ENV"
+
+      - name: Gather related closing issue and its project relation
+        id: closing_issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
+        run: |
+          ISSUE_GRAPHQL_QUERY='
+          query($prNumber: Int!, $owner: String!, $repository: String!) {
+            repository(owner: $owner, name: $repository) {
+                pullRequest(number: $prNumber) {
+                    id
+                    closingIssuesReferences (first: 1) {
+                        edges {
+                            node {
+                                id
+                                body
+                                number
+                                title
+                                projectItems(first: 1) {
+                                    edges {
+                                        node {
+                                            id
+                                            type
+                                            project {
+                                                id
+                                                number
+                                                fields(first: 50) {
+                                                    edges {
+                                                        node {
+                                                            ... on ProjectV2SingleSelectField {
+                                                                id
+                                                                name
+                                                                options {
+                                                                    id
+                                                                    name
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+          }
+          '
+
+          RELATED_ISSUE=$(gh api graphql \
+            -F owner=${{ github.repository_owner }} \
+            -F repository=${{ github.event.repository.name }} \
+            -F prNumber=${{ github.event.pull_request.number }} \
+            -F query="$ISSUE_GRAPHQL_QUERY" \
+            --jq '.data.repository.pullRequest.closingIssuesReferences.edges[0].node' \
+          )
+
+          echo "DEBUG>>RELATED_ISSUE = $RELATED_ISSUE"
+
+          ISSUE_TITLE=$(echo $RELATED_ISSUE | jq .title --raw-output)
+          ISSUE_NUMBER=$(echo $RELATED_ISSUE | jq .number --raw-output)
+
+          PROJECT_ITEM=$(echo $RELATED_ISSUE | jq .projectItems.edges[0].node)
+          PROJECT_ITEM_ID=$(echo $PROJECT_ITEM | jq .id --raw-output)
+          PROJECT_ID=$(echo $PROJECT_ITEM | jq .project.id --raw-output)
+
+          FIELD_STATUS=$(
+            echo $PROJECT_ITEM | jq '.project.fields.edges[] | select(.node.name == "Status")'
+          )
+          FIELD_STATUS_ID=$(echo $FIELD_STATUS | jq .node.id --raw-output)
+          FIELD_STATUS_NEXT_VALUE_ID=$(
+            echo $FIELD_STATUS | jq '.node.options[] | select(.name == "${{ env.NEXT_STATUS }}") | .id' --raw-output
+          )
+
+          echo "title=$ISSUE_TITLE" >> "$GITHUB_OUTPUT"
+          echo "number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "project_item_id=$PROJECT_ITEM_ID" >> "$GITHUB_OUTPUT"
+          echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+          echo "status_id=$FIELD_STATUS_ID" >> "$GITHUB_OUTPUT"
+          echo "next_status_id=$FIELD_STATUS_NEXT_VALUE_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Assign related issue to yourself
+        if: ${{ github.event.pull_request.merged == false }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
+        run: |
+          gh issue \
+            --repo ${{ github.repository }} \
+            edit ${{ steps.closing_issue.outputs.number }} \
+            --add-assignee ${{ github.event.pull_request.user.login }}
+
+      - name: Move issue in board
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
+        run: |
+          gh project item-edit \
+            --project-id ${{ steps.closing_issue.outputs.project_id }} \
+            --id ${{ steps.closing_issue.outputs.project_item_id }} \
+            --field-id ${{ steps.closing_issue.outputs.status_id }} \
+            --single-select-option-id ${{ steps.closing_issue.outputs.next_status_id }}
