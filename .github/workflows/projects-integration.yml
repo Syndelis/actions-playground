@@ -15,12 +15,12 @@ jobs:
         run: echo "NEXT_STATUS=Todo" >> "$GITHUB_ENV"
 
       - name: Decided to move issue to 'In Progress'
-        if: ${{ github.event.pull_request.merged }} == false && !${{ github.event.pull_request.closed_at }}
+        if: ${{ github.event.pull_request.merged == false }} && ${{ !github.event.pull_request.closed_at }}
         shell: bash
         run: echo "NEXT_STATUS=In Progress" >> "$GITHUB_ENV"
 
       - name: Decided to move issue to 'Done'
-        if: ${{ github.event.pull_request.merged }} == true
+        if: ${{ github.event.pull_request.merged == true }}
         shell: bash
         run: echo "NEXT_STATUS=Done" >> "$GITHUB_ENV"
 
@@ -109,7 +109,7 @@ jobs:
           echo "next_status_id=$FIELD_STATUS_NEXT_VALUE_ID" >> "$GITHUB_OUTPUT"
 
       - name: Assign related issue to yourself
-        if: ${{ github.event.pull_request.merged }} == false
+        if: ${{ github.event.pull_request.merged == false }}
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
