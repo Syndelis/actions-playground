@@ -13,7 +13,7 @@ jobs:
         id: closing_issue
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
         run: |
           ISSUE_GRAPHQL_QUERY='
           query($prNumber: Int!, $owner: String!, $repository: String!) {
@@ -99,7 +99,7 @@ jobs:
       - name: Assign related issue to yourself
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
         run: |
           gh issue \
             --repo ${{ github.repository }} \
@@ -109,7 +109,7 @@ jobs:
       - name: Move issue to 'In Progress'
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
         run: |
           gh project item-edit \
             --project-id ${{ steps.closing_issue.outputs.project_id }} \
