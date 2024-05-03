@@ -6,10 +6,7 @@ on:
 jobs:
   assign_ticket:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: read
-      repository-projects: write
+    permissions: write-all
 
     steps:
       - name: Gather related closing issue and its project relation
