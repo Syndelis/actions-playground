@@ -13,11 +13,57 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          ISSUE_GRAPHQL_QUERY='
+          query($prNumber: Int!, $owner: String!, $repository: String!) {
+            repository(owner: $owner, name: $repository) {
+                pullRequest(number: $prNumber) {
+                    id
+                    closingIssuesReferences (first: 1) {
+                        edges {
+                            node {
+                                id
+                                body
+                                number
+                                title
+                                projectItems(first: 1) {
+                                    edges {
+                                        node {
+                                            id
+                                            type
+                                            project {
+                                                id
+                                                number
+                                                fields(first: 50) {
+                                                    edges {
+                                                        node {
+                                                            ... on ProjectV2SingleSelectField {
+                                                                id
+                                                                name
+                                                                options {
+                                                                    id
+                                                                    name
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+          }
+          '
+
           RELATED_ISSUE=$(gh api graphql \
             -F owner=${{ github.repository_owner }} \
             -F repository=${{ github.event.repository.name }} \
             -F prNumber=${{ github.event.pull_request.number }} \
-            -F query=@.github/workflows/files/gh_related_issue.graphql \
+            -F query="$ISSUE_GRAPHQL_QUERY" \
             --jq '.data.repository.pullRequest.closingIssuesReferences.edges[0].node' \
           )
 
