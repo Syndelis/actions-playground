@@ -74,6 +74,9 @@ jobs:
           ISSUE_TITLE=$(echo $RELATED_ISSUE | jq .title --raw-output)
           ISSUE_NUMBER=$(echo $RELATED_ISSUE | jq .number --raw-output)
 
+          AS_REST_QUERY=$(gh project --owner syndelis item-list 2 --format json --jq ".items[] | select(.content.number == $ISSUE_NUMBER)")
+          echo "DEBUG>>AS_REST_QUERY = $AS_REST_QUERY"
+
           PROJECT_ITEM=$(echo $RELATED_ISSUE | jq .projectItems.edges[0].node)
           PROJECT_ITEM_ID=$(echo $PROJECT_ITEM | jq .id --raw-output)
           PROJECT_ID=$(echo $PROJECT_ITEM | jq .project.id --raw-output)
