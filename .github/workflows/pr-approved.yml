@@ -1,0 +1,27 @@
+on:
+  pull_request_review:
+    types:
+      - submitted
+      - dismissed
+  
+  pull_request:
+    types:
+      - review_requested
+
+jobs:
+  juggle_labels_on_approve:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "This PR was approved"
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Add Label Conditionally
+        uses: ./.github/actions/functional-labeler
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          when_review_status: APPROVED
+          then_add_labels: approved1,approved2
+          then_remove_labels: waiting-1,waiting_2
+          also_reverse: true
